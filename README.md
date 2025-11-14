@@ -1,4 +1,13 @@
-## The Featherweight Logger
+
+# The Featherweight Logger
+
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue)
+![Nginx](https://img.shields.io/badge/Nginx-Configured-orange)
+![Dozzle](https://img.shields.io/badge/Dozzle-Integrated-yellow)
+![Status](https://img.shields.io/badge/Status-Stable-brightgreen)
+![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-blueviolet)
+![Made With Love](https://img.shields.io/badge/Made%20with-❤️-ff69b4)
 
 A simple, secure, and lightweight solution for streaming application logs in real-time without needing SSH access.
 
