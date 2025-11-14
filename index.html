@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Featherweight Logger</title>
+    <!-- Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <!-- Font Awesome Icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Font: Inter --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom scrollbar for a more "app-like" feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* NEW: Pro Blue Gradient */
+        .blue-gradient {
+            background-image: linear-gradient(90deg, #3b82f6 2.51%, #60a5fa 50%, #93c5fd 100%);
+        }
+        
+        /* For text */
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        /* Active nav link style */
+        .nav-link.active {
+            background-color: #374151;
+            color: white;
+            box-shadow: inset 4px 0 0 0 #3b82f6; /* Blue accent line */
+        }
+        .nav-link:hover {
+            background-color: #374151;
+        }
+
+        /* Tab content */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Accordion open/close icon */
+        details > summary::after {
+            content: '\f078'; /* Font Awesome down arrow */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            float: right;
+            transition: transform 0.2s;
+            color: #3b82f6; /* Blue accent */
+        }
+        details[open] > summary::after {
+            transform: rotate(180deg);
+        }
+        details > summary {
+            list-style: none; /* Hide default marker */
+        }
+        details > summary::-webkit-details-marker {
+            display: none; /* Hide default marker */
+        }
+
+        /* NEW: 3D Hover & Background Grid */
+        .has-3d-hover {
+            perspective: 1000px;
+        }
+        .card-3d {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform-style: preserve-3d;
+        }
+        .card-3d:hover {
+            transform: translateY(-6px) rotateY(8deg) scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+        /* Simple lift for main cards */
+        .card-lift {
+             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .card-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.3);
+        }
+        /* New background for main content area */
+        .main-bg-grid {
+             background-color: #111827;
+             background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                               linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+             background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        
+        <!-- Sidebar Navigation --><nav class="w-full md:w-64 bg-gray-950 border-r border-gray-800 flex-shrink-0">
+            <!-- Header --><header class="p-5 border-b border-gray-800 flex items-center gap-3">
+                <!-- NEW: Replaced with user's logo -->
+                <img src="https://aslase.com/assets/aslase-logo.png" alt="Logo" class="h-10 w-auto">
+            </header>
+            
+            <!-- Nav Links --><ul class="p-3 space-y-2">
+                <li>
+                    <a href="#" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 transition-colors" onclick="showTab('overview', this)">
+                        <i class="fa-solid fa-chart-pie fa-fw w-5"></i>
+                        <span class="font-medium">Overview</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 transition-colors" onclick="showTab('configuration', this)">
+                        <i class="fa-solid fa-cogs fa-fw w-5"></i>
+                        <span class="font-medium">Configuration</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 transition-colors" onclick="showTab('maintenance', this)">
+                        <i class="fa-solid fa-wrench fa-fw w-5"></i>
+                        <span class="font-medium">Maintenance</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area --><main class="flex-1 p-6 md:p-10 overflow-auto main-bg-grid">
+            
+            <!-- Overview Tab --><section id="overview" class="tab-content active space-y-8">
+                <div>
+                    <!-- NEW: Using blue-gradient --><h1 class="text-4xl font-bold text-white blue-gradient text-gradient"> Secure Live Log Streaming</h1>
+                    <p class="mt-2 text-xl text-gray-400">
+                        Interactive documentation for your project's logging system.
+                    </p>
+                </div>
+
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-lg card-lift">
+                    <h2 class="text-2xl font-semibold text-white mb-3">Purpose</h2>
+                    <!-- NEW: Added minimal resources point --><p class="text-gray-400 leading-relaxed">
+                        This system provides a secure, read-only, live-streaming log dashboard for staging and production environments, eliminating the need for developer SSH access.
+                        <span class="block mt-3 text-blue-400 font-medium">This solution is lightweight and ideal for environments with minimal server resources.</span>
+                    </p>
+                </div>
+
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-lg card-lift">
+                    <h2 class="text-2xl font-semibold text-white mb-6">System Architecture</h2>
+                    
+                    <!-- Visual Flow Diagram --><div class="flex flex-col md:flex-row items-center justify-between gap-4 has-3d-hover py-4">
+                        
+                        <!-- Col 1: Developer --><div class="flex flex-col items-center text-center card-3d p-4 rounded-lg">
+                            <div class="h-24 w-24 flex items-center justify-center rounded-full bg-gray-800 border-2 border-gray-700 shadow-lg">
+                                <!-- NEW: Replaced <i> tag with inline SVG to fix caching issue -->
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-14 h-14 text-blue-400">
+                                    <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.476 7.476 0 0 1 12 15a7.476 7.476 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <h3 class="mt-3 text-lg font-semibold text-white">Developer</h3>
+                            <p class="text-sm text-gray-400">Accesses via Port 1010</p>
+                        </div>
+                        
+                        <div class="text-gray-600 text-3xl hidden md:block"><i class="fa-solid fa-arrow-right-long"></i></div>
+                        <div class="text-gray-600 text-3xl md:hidden"><i class="fa-solid fa-arrow-down-long"></i></div>
+
+                        <!-- Col 2: Nginx --><div class="flex flex-col items-center text-center card-3d p-4 rounded-lg">
+                            <div class="h-24 w-24 flex items-center justify-center rounded-full bg-gray-800 border-2 border-gray-700 shadow-lg">
+                                <i class="fa-solid fa-shield-halved text-4xl text-green-400"></i>
+                            </div>
+                            <h3 class="mt-3 text-lg font-semibold text-white">Nginx</h3>
+                            <p class="text-sm text-gray-400">Password Auth</p>
+                        </div>
+
+                        <div class="text-gray-600 text-3xl hidden md:block"><i class="fa-solid fa-arrow-right-long"></i></div>
+                        <div class="text-gray-600 text-3xl md:hidden"><i class="fa-solid fa-arrow-down-long"></i></div>
+
+                        <!-- Col 3: Dozzle --><div class="flex flex-col items-center text-center card-3d p-4 rounded-lg">
+                            <div class="h-24 w-24 flex items-center justify-center rounded-full bg-gray-800 border-2 border-gray-700 shadow-lg">
+                                <i class="fa-solid fa-chalkboard-user text-4xl text-yellow-400"></i>
+                            </div>
+                            <h3 class="mt-3 text-lg font-semibold text-white">Dozzle UI</h3>
+                            <p class="text-sm text-gray-400">Internal Port 8888</p>
+                        </div>
+
+                        <div class="text-gray-600 text-3xl hidden md:block"><i class="fa-solid fa-arrow-right-long"></i></div>
+                        <div class="text-gray-600 text-3xl md:hidden"><i class="fa-solid fa-arrow-down-long"></i></div>
+
+                        <!-- Col 4: Streamers --><div class="flex flex-col items-center text-center space-y-3 card-3d p-4 rounded-lg">
+                            <div class="px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 shadow-lg flex items-center gap-3 w-60">
+                                <i class="fa-solid fa-right-left text-xl text-purple-400"></i>
+                                <div>
+                                    <h4 class="font-semibold text-white">log-streamer-staging</h4>
+                                    <p class="text-xs text-gray-400">Reads staging files</p>
+                                </div>
+                            </div>
+                            <div class="px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 shadow-lg flex items-center gap-3 w-60">
+                                <i class="fa-solid fa-right-left text-xl text-purple-400"></i>
+                                <div>
+                                    <h4 class="font-semibold text-white">log-streamer-prod</h4>
+                                    <p class="text-xs text-gray-400">Reads production files</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Tab --><section id="configuration" class="tab-content space-y-6">
+                <h1 class="text-4xl font-bold text-white">Component Configuration</h1>
+                <p class="text-lg text-gray-400 -mt-2">
+                    Here's what each part does, explained simply.
+                </p>
+
+                <!-- NEW: This is the entirely rebuilt section -->
+                <div class="space-y-12 mt-10">
+            
+                    <!-- Card 1: Nginx (Gateway) -->
+                    <div class="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+                        <!-- Left Side: Explanation -->
+                        <div class="w-full md:w-1/3">
+                            <div class="flex items-center gap-4">
+                                <i class="fa-solid fa-shield-halved text-4xl text-green-400 flex-shrink-0"></i>
+                                <h2 class="text-3xl font-semibold text-white">1. Nginx (Gateway)</h2>
+                            </div>
+                            <p class="mt-4 text-gray-300 italic text-lg">
+                                <strong>Analogy:</strong> Think of this as the <span class="text-green-300 font-medium">secure front-desk receptionist</span> for our system.
+                            </p>
+                            <p class="mt-3 text-gray-400 leading-relaxed">
+                                Its job is to be the only "door" to the outside world. It stops everyone and asks for a password. If you have the right password, it connects you to the log dashboard.
+                            </p>
+                        </div>
+                        <!-- Right Side: Technical Details (Hidden) -->
+                        <div class="w-full md:w-2/3">
+                            <details class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden card-lift">
+                                <summary class="p-5 cursor-pointer text-lg font-semibold text-white hover:bg-gray-800 transition-colors">
+                                    Show Technical Details
+                                </summary>
+                                <div class="p-5 border-t border-gray-800 bg-gray-950 space-y-4">
+                                    <ul class="list-disc list-inside text-gray-400 space-y-1">
+                                        <li><strong>Role:</strong> Securely reverse-proxies requests to Dozzle.</li>
+                                        <li><strong>Listens:</strong> <code class="text-sm bg-gray-800 text-blue-300 px-2 py-1 rounded">1010</code></li>
+                                        <li><strong>Config File:</strong> <code class="text-sm bg-gray-800 text-gray-300 px-2 py-1 rounded">/etc/nginx/sites-available/log-viewer</code></li>
+                                        <li><strong>Password File:</strong> <code class="text-sm bg-gray-800 text-gray-300 px-2 py-1 rounded">/etc/nginx/.htpasswd</code></li>
+                                    </ul>
+                                    <h4 class="text-base font-semibold mt-4 text-white">Nginx Configuration:</h4>
+                                    <div class="code-block">
+                                        <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-400">nginx.conf</span>
+                                            <button class="copy-btn" onclick="copyCode(this)">
+                                                <i class="fa-solid fa-copy mr-1"></i> Copy
+                                            </button>
+                                        </div>
+<pre><code><span class="text-blue-300">server</span> {
+    <span class="text-gray-400"># ... (config as before) ...</span>
+    <span class="text-cyan-300">listen</span> 1010;
+    <span class="text-cyan-300">server_name</span> _;
+
+    <span class="text-cyan-300">auth_basic</span> <span class="text-green-300">"Restricted Access - Logs"</span>;
+    <span class="text-cyan-300">auth_basic_user_file</span> /etc/nginx/.htpasswd;
+
+    <span class="text-blue-300">location</span> / {
+        <span class="text-cyan-300">proxy_pass</span> http://127.0.0.1:8888;
+        <span class="text-cyan-300">proxy_set_header</span> Host $host;
+        <span class="text-cyan-300">proxy_set_header</span> X-Real-IP $remote_addr;
+        <span class="text-cyan-300">proxy_set_header</span> X-Forwarded-For $proxy_add_x_forwarded_for;
+        <span class="text-cyan-300">proxy_set_header</span> Upgrade $http_upgrade;
+        <span class="text-cyan-300">proxy_set_header</span> Connection <span class="text-green-300">"upgrade"</span>;
+    }
+}</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                    
+                    <hr class="border-gray-800">
+
+                    <!-- Card 2: Dozzle (Dashboard) -->
+                    <div class="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+                        <!-- Left Side: Explanation -->
+                        <div class="w-full md:w-1/3">
+                            <div class="flex items-center gap-4">
+                                <i class="fa-solid fa-chalkboard-user text-4xl text-yellow-400 flex-shrink-0"></i>
+                                <h2 class="text-3xl font-semibold text-white">2. Dozzle (Dashboard)</h2>
+                            </div>
+                            <p class="mt-4 text-gray-300 italic text-lg">
+                                <strong>Analogy:</strong> This is the <span class="text-yellow-300 font-medium">live TV monitor</span> that displays all the log streams.
+                            </p>
+                            <p class="mt-3 text-gray-400 leading-relaxed">
+                                This is the actual web page you see after you log in. It's a clean dashboard that shows all the developer messages (logs) as they happen, just like a live news feed.
+                            </p>
+                        </div>
+                        <!-- Right Side: Technical Details (Hidden) -->
+                        <div class="w-full md:w-2/3">
+                            <details class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden card-lift">
+                                <summary class="p-5 cursor-pointer text-lg font-semibold text-white hover:bg-gray-800 transition-colors">
+                                    Show Technical Details
+                                </summary>
+                                <div class="p-5 border-t border-gray-800 bg-gray-950 space-y-4">
+                                    <ul class="list-disc list-inside text-gray-400 space-y-1">
+                                        <li><strong>Role:</strong> Provides the web UI.</li>
+                                        <li><strong>Container Name:</strong> <code class="text-sm bg-gray-800 text-blue-300 px-2 py-1 rounded">dozzle</code></li>
+                                        <li><strong>Internal Port:</strong> <code class="text-sm bg-gray-800 text-blue-300 px-2 py-1 rounded">127.0.0.1:8888</code></li>
+                                    </ul>
+                                    <h4 class="text-base font-semibold mt-4 text-white">Dozzle Docker Run Command:</h4>
+                                    <div class="code-block">
+                                        <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-400">bash</span>
+                                            <button class="copy-btn" onclick="copyCode(this)">
+                                                <i class="fa-solid fa-copy mr-1"></i> Copy
+                                            </button>
+                                        </div>
+<pre><code><span class="text-cyan-300">docker run</span> -d --name dozzle \
+  --volume=/var/run/docker.sock:/var/run/docker.sock \
+  -p 127.0.0.1:8888:8080 \
+  --restart=always \
+  amir20/dozzle:latest</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-800">
+
+                    <!-- Card 3: Log Streamers -->
+                    <div class="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+                        <!-- Left Side: Explanation -->
+                        <div class="w-full md:w-1/3">
+                            <div class="flex items-center gap-4">
+                                <i class="fa-solid fa-right-left text-4xl text-purple-400 flex-shrink-0"></i>
+                                <h2 class="text-3xl font-semibold text-white">3. Log Streamers</h2>
+                            </div>
+                            <p class="mt-4 text-gray-300 italic text-lg">
+                                <strong>Analogy:</strong> These are the <span class="text-purple-300 font-medium">translators</span> that find text files and put them on the "live TV".
+                            </p>
+                            <p class="mt-3 text-gray-400 leading-relaxed">
+                                The "live TV" (Dozzle) can't read files. It only watches live feeds. These tiny programs find the log files, read them, and "broadcast" them as a live feed. We use two (Staging & Prod) so we never get the feeds mixed up.
+                            </p>
+                        </div>
+                        <!-- Right Side: Technical Details (Hidden) -->
+                        <div class="w-full md:w-2/3">
+                            <details class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden card-lift">
+                                <summary class="p-5 cursor-pointer text-lg font-semibold text-white hover:bg-gray-800 transition-colors">
+                                    Show Technical Details
+                                </summary>
+                                <div class="p-5 border-t border-gray-800 bg-gray-950 space-y-4">
+                                    <ul class="list-disc list-inside text-gray-400 space-y-1">
+                                        <li><strong>Role:</strong> Reads log files from volumes and streams them as container output.</li>
+                                        <li><strong>Container Names:</strong> <code class="text-sm bg-gray-800 text-blue-300 px-2 py-1 rounded">log-streamer-staging</code>, <code class="text-sm bg-gray-800 text-blue-300 px-2 py-1 rounded">log-streamer-prod</code></li>
+                                    </ul>
+                                    
+                                    <h4 class="text-base font-semibold mt-4 text-white">Staging Streamer Command:</h4>
+                                    <div class="code-block">
+                                        <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-400">bash</span>
+                                            <button class="copy-btn" onclick="copyCode(this)">
+                                                <i class="fa-solid fa-copy mr-1"></i> Copy
+                                            </button>
+                                        </div>
+<pre><code><span class="text-cyan-300">docker run</span> -d --name log-streamer-staging \
+  --restart=always \
+  --volume=<span class="text-green-300">"/path/to/your-staging/storage_logs:/logs/laravel:ro"</span> \
+  --volume=<span class="text-green-300">"/path/to/your-staging/nginx_logs:/logs/nginx:ro"</span> \
+  alpine \
+  tail -F /logs/laravel/laravel.log /logs/nginx/access.log /logs/nginx/error.log</code></pre>
+                                    </div>
+        
+                                    <h4 class="text-base font-semibold mt-6 text-white">Production Streamer Command:</h4>
+                                    <div class="code-block">
+                                        <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-400">bash</span>
+                                            <button class="copy-btn" onclick="copyCode(this)">
+                                                <i class="fa-solid fa-copy mr-1"></i> Copy
+                                            </button>
+                                        </div>
+<pre><code><span class="text-cyan-300">docker run</span> -d --name log-streamer-prod \
+  --restart=always \
+  --volume=<span class="text-green-300">"/path/to/your-production/storage_logs:/logs/laravel:ro"</span> \
+  --volume=<span class="text-green-300">"/path/to/your-production/nginx_logs:/logs/nginx:ro"</span> \
+  alpine \
+  tail -F /logs/laravel/laravel.log /logs/nginx/access.log /logs/nginx/error.log</code></pre>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Maintenance Tab --><section id="maintenance" class="tab-content space-y-6">
+                <h1 class="text-4xl font-bold text-white">Maintenance & Troubleshooting</h1>
+                <p class="text-lg text-gray-400 -mt-2">
+                    Quick commands for operating and maintaining the log system.
+                </p>
+
+                <!-- Maintenance Accordion --><div class="space-y-4">
+                    <details class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+                        <summary class="p-5 cursor-pointer text-lg font-semibold text-white hover:bg-gray-800 transition-colors">
+                            Check Status
+                        </summary>
+                        <div class="p-5 border-t border-gray-800 bg-gray-950 space-y-4">
+                            <p class="text-gray-400">Check all running Docker containers (you should see `dozzle`, `log-streamer-staging`, and `log-streamer-prod` listed as "Up").</p>
+                            <div class="code-block">
+                                <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-400">bash</span>
+                                    <button class="copy-btn" onclick="copyCode(this)">
+                                        <i class="fa-solid fa-copy mr-1"></i> Copy
+                                    </button>
+                                </div>
+<pre><code>docker ps</code></pre>
+                            </div>
+                            <p class="text-gray-400">Check the Nginx service status.</p>
+                            <div class="code-block">
+                                <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-400">bash</span>
+                                    <button class="copy-btn" onclick="copyCode(this)">
+                                        <i class="fa-solid fa-copy mr-1"></i> Copy
+                                    </button>
+                                </div>
+<pre><code>sudo systemctl status nginx</code></pre>
+                            </div>
+                        </div>
+                    </details>
+
+                    <details class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+                        <summary class="p-5 cursor-pointer text-lg font-semibold text-white hover:bg-gray-800 transition-colors">
+                            Restart Components
+                        </summary>
+                        <div class="p-5 border-t border-gray-800 bg-gray-950 space-y-4">
+                            <p class="text-gray-400">Restart Nginx after a configuration change (tests config first).</p>
+                            <div class="code-block">
+                                <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-400">bash</span>
+                                    <button class="copy-btn" onclick="copyCode(this)">
+                                        <i class="fa-solid fa-copy mr-1"></i> Copy
+                                    </button>
+                                </div>
+<pre><code>sudo nginx -t && sudo systemctl restart nginx</code></pre>
+                            </div>
+                            <p class="text-gray-400">Restart individual Docker containers.</p>
+                            <div class="code-block">
+                                <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-400">bash</span>
+                                    <button class="copy-btn" onclick="copyCode(this)">
+                                        <i class="fa-solid fa-copy mr-1"></i> Copy
+                                    </button>
+                                </div>
+<pre><code>docker restart dozzle
+docker restart log-streamer-staging
+docker restart log-streamer-prod</code></pre>
+                            </div>
+                        </div>
+                    </details>
+
+                    <details class="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+                        <summary class="p-5 cursor-pointer text-lg font-semibold text-white hover:bg-gray-800 transition-colors">
+                            Update Password
+                        </summary>
+                        <div class="p-5 border-t border-gray-800 bg-gray-950 space-y-4">
+                            <p class="text-gray-400">To change the password for an existing `developer` user:</p>
+                            <div class="code-block">
+                                <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-400">bash</span>
+                                    <button class="copy-btn" onclick="copyCode(this)">
+                                        <i class="fa-solid fa-copy mr-1"></i> Copy
+                                    </button>
+                                </div>
+<pre><code>sudo htpasswd /etc/nginx/.htpasswd developer</code></pre>
+                            </div>
+                            <p class="text-gray-400">To add a new user (e.g., `new_dev`):</p>
+                            <div class="code-block">
+                                <div class="code-header bg-gray-800 p-3 -m-4 mb-4 rounded-t-lg border-b border-gray-700 flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-400">bash</span>
+                                    <button class="copy-btn" onclick="copyCode(this)">
+                                        <i class="fa-solid fa-copy mr-1"></i> Copy
+                                    </tran>
+                                </div>
+<pre><code>sudo htpasswd /etc/nginx/.htpasswd new_dev</code></pre>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Alpine.js for nested tabs --><script src="//unpkg.com/alpinejs" defer></script>
+    
+    <script>
+        function showTab(tabName, element) {
+            // Handle nav link active state
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            // Handle tab content visibility
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        function copyCode(buttonElement) {
+            // Find the <pre> tag, which is the parent's next sibling
+            const pre = buttonElement.closest('.code-header').nextElementSibling;
+            const code = pre.innerText;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                buttonElement.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Copied!';
+                setTimeout(() => {
+                    buttonElement.innerHTML = '<i class="fa-solid fa-copy mr-1"></i> Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                buttonElement.innerText = 'Error';
+            });
+        }
+
+        // Initialize first tab
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.nav-link.active').click();
+        });
+    </SCriPt>
+</bOdY>
+</html>
